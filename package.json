@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.18.3",
+    "@heroicons/react": "^2.2.0",
     "@mapbox/polyline": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -27,8 +28,10 @@
     "lucide-react": "^0.513.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.6.2",
+    "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.8"
   },

@@ -114,6 +114,16 @@ export const getAllRuasJalan = async (): Promise<AxiosResponse<any>> => {
   });
 };
 
+export const getRuasJalanByID = async (id: string): Promise<AxiosResponse<RuasJalanData>> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token tidak tersedia. User belum login?");
+  }
+  return await axios.get<RuasJalanData>(`${API_BASE_URL}/ruasjalan/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 // Ruas Jalan API
 export const addNewRuasJalan = (data: RuasJalanData) => {
   const token = getToken();

@@ -16,17 +16,17 @@ import {
     getMasterJenisJalan,
     getMasterKondisiJalan,
     getDesaByKecamatanID,
-    addNewRuasJalan,
+    getRuasJalanByID,
+    editRuasJalanByID,
 } from "@/api/apiService";
 
-import { AlertSuccess } from "./AlertSuccess";
-import { AlertError } from "./AlertError";
-
 type Props = {
+    id: string;
     onSuccess?: () => void;
+    onError?: (msg: string) => void;
 };
 
-export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
+export const EditRuasJalanForm: React.FC<Props> = ({ id, onSuccess, onError }) => {
     const [formData, setFormData] = useState({
         paths: "",
         desa_id: "",
@@ -45,8 +45,6 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
     const [kondisiOptions, setKondisiOptions] = useState<any[]>([]);
     const [jenisJalanOptions, setJenisJalanOptions] = useState<any[]>([]);
     const [showMap, setShowMap] = useState(false);
-
-    const [status, setStatus] = useState<"success" | "error" | null>(null);
 
     const handleChange = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -75,46 +73,50 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
         }
     };
 
-    const [refreshKey, setRefreshKey] = useState(0); // trigger refresh
+    const fetchData = async () => {
+        try {
+            const res = await getRuasJalanByID(id);
+            setFormData(res.data);
+        } catch (err) {
+            console.error("Gagal mengambil data:", err);
+            onError?.("Gagal mengambil data ruas jalan.");
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await addNewRuasJalan(formData);
-            alert("Berhasil menambahkan data!");
-            setRefreshKey((prev) => prev + 1); // trigger refresh MapView
-            if (onSuccess) onSuccess();
+            await editRuasJalanByID(id, formData);
+            alert("Berhasil mengubah data!");
+            onSuccess?.();
         } catch (error) {
             console.error(error);
-            alert("Gagal menambahkan data.");
+            alert("Gagal mengubah data.");
+            onError?.("Gagal mengupdate data ruas jalan.");
         }
     };
 
     useEffect(() => {
         fetchDropdowns();
-    }, []);
+        fetchData();
+    }, [id]);
 
     return (
         <div className="max-w-2xl mx-auto p-4">
-            <h1 className="text-xl font-bold mb-4">Tambah Ruas Jalan</h1>
-            {status === "success" && (
-                <AlertSuccess message="Data berhasil disimpan!" />
-            )}
-            {status === "error" && (
-                <AlertError message="Gagal menyimpan data!" />
-            )}
+            <h1 className="text-xl font-bold mb-4">Edit Ruas Jalan</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="flex flex-col gap-1">
                     <Label>Path</Label>
-                    <Button type="button" variant={"outline"} onClick={() => setShowMap(true)}>
+                    <Button type="button" variant="outline" onClick={() => setShowMap(true)}>
                         {formData.paths ? "Ubah Polyline" : "Tambah Polyline"}
                     </Button>
                 </div>
                 {showMap && (
                     <div className="h-[400px] mt-4">
-                        <MapView onPathChange={handlePathChange} />
+                        <MapView onPathChange={handlePathChange} initialPath={formData.paths} />
                     </div>
                 )}
+
                 <div className="flex flex-col gap-1">
                     <Label>Kode Ruas</Label>
                     <Input
@@ -123,6 +125,7 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
                         required
                     />
                 </div>
+
                 <div className="flex flex-col gap-1">
                     <Label>Nama Ruas</Label>
                     <Input
@@ -131,6 +134,7 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
                         required
                     />
                 </div>
+
                 <div className="flex flex-col gap-1">
                     <Label>Panjang</Label>
                     <Input
@@ -139,6 +143,7 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
                         required
                     />
                 </div>
+
                 <div className="flex flex-col gap-1">
                     <Label>Lebar</Label>
                     <Input
@@ -147,6 +152,7 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
                         required
                     />
                 </div>
+
                 <div className="flex flex-col gap-1">
                     <Label>Keterangan</Label>
                     <Input
@@ -154,6 +160,7 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
                         onChange={(e) => handleChange("keterangan", e.target.value)}
                     />
                 </div>
+
                 <div className="flex flex-col gap-1">
                     <Label>Desa</Label>
                     <Select
@@ -231,11 +238,11 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
                 </div>
 
                 <Button className="w-full">
-                    Simpan
+                    Simpan Perubahan
                 </Button>
             </form>
         </div>
     );
 };
 
-export default AddRuasJalanForm;
+export default EditRuasJalanForm;

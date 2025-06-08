@@ -1,4 +1,5 @@
-import { Calendar, Inbox, Search } from "lucide-react";
+import { MapIcon, ListBulletIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { Loader2Icon } from "lucide-react"
 
 import {
     Sidebar,
@@ -10,6 +11,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarFooter,
+    SidebarHeader,
 } from "@/components/ui/sidebar";
 
 import {
@@ -28,9 +30,9 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const items = [
-    { title: "Map", key: "home", icon: Inbox },
-    { title: "Daftar Ruas Jalan", key: "ruasjalan", icon: Calendar },
-    { title: "Tambah Ruas Jalan", key: "tambah", icon: Search },
+    { title: "Map", key: "home", icon: MapIcon },
+    { title: "Daftar Ruas Jalan", key: "ruasjalan", icon: ListBulletIcon },
+    { title: "Tambah Ruas Jalan", key: "tambah", icon: PlusIcon },
 ];
 
 type AppSidebarProps = {
@@ -50,9 +52,13 @@ export function AppSidebar({ style, onOpenPanel, onOpenAddForm }: AppSidebarProp
 
     return (
         <Sidebar style={style} className="w-64 h-full flex flex-col">
+            {/* Header */}
+            <SidebarHeader className="px-4 py-3 border-b">
+                <div className="text-xl font-semibold">Aplikasi GIS</div>
+            </SidebarHeader>
+            {/* Konten utama */}
             <SidebarContent style={{ flexGrow: 1 }}>
                 <SidebarGroup>
-                    <SidebarGroupLabel>GIS</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
@@ -81,7 +87,7 @@ export function AppSidebar({ style, onOpenPanel, onOpenAddForm }: AppSidebarProp
                 </SidebarGroup>
             </SidebarContent>
 
-            {/* Footer Logout dengan AlertDialog */}
+            {/* Footer Logout */}
             <SidebarFooter style={{ padding: "1rem", borderTop: "1px solid #e5e7eb" }}>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>

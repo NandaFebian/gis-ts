@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getAllRuasJalan, deleteRuasJalanByID } from '@/api/apiService';
+import {
+    getAllRuasJalan,
+    deleteRuasJalanByID,
+    getMasterKondisiJalan,
+    getMasterJenisJalan,
+} from '@/api/apiService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from "@/components/ui/input";
+import { Input } from '@/components/ui/input';
 
 import {
     Table,
@@ -22,10 +27,18 @@ import {
     AlertDialogDescription,
     AlertDialogCancel,
     AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from '@/components/ui/select';
 
 interface RuasJalanData {
-    id: string; // atau number jika dari API berupa angka
+    id: string;
     paths: string;
     desa_id: string;
     kode_ruas: string;
@@ -38,56 +51,85 @@ interface RuasJalanData {
     keterangan: string;
 }
 
-/**
- * Props:
- * ─ onDeleteSuccess  → dipanggil jika hapus berhasil
- * ─ onError          → dipanggil jika fetch / delete gagal
- */
 interface RuasJalanTableProps {
     onDeleteSuccess?: (msg: string) => void;
     onError?: (msg: string) => void;
+    onEdit?: (id: string) => void;
 }
 
 export const RuasJalanTable = ({
     onDeleteSuccess,
     onError,
+    onEdit,
 }: RuasJalanTableProps) => {
     const [data, setData] = useState<RuasJalanData[]>([]);
     const [filteredData, setFilteredData] = useState<RuasJalanData[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState<boolean>(true);
+    const [kondisiList, setKondisiList] = useState<{ id: number; kondisi: string }[]>([]);
+    const [jenisJalanList, setJenisJalanList] = useState<{ id: number; jenisjalan: string }[]>([]);
+    const [selectedKondisi, setSelectedKondisi] = useState('all');
+    const [selectedJenis, setSelectedJenis] = useState('all');
 
-    /** Ambil data dari API */
+    const kondisiMap: Record<string, string> = {
+        "1": "Baik",
+        "2": "Sedang",
+        "3": "Rusak",
+    };
+
+    const jenisJalanMap: Record<string, string> = {
+        "1": "Desa",
+        "2": "Kabupaten",
+        "3": "Provinsi",
+    };
+
     const fetchData = async () => {
         try {
-            const response = await getAllRuasJalan();
-            const ruas = response.data.ruasjalan;
+            const [ruasResponse, kondisiResponse, jenisResponse] = await Promise.all([
+                getAllRuasJalan(),
+                getMasterKondisiJalan(),
+                getMasterJenisJalan(),
+            ]);
+
+            const ruas = ruasResponse.data.ruasjalan;
             setData(ruas);
-            setFilteredData(ruas); // awalnya semua
+            setFilteredData(ruas);
+            setKondisiList(kondisiResponse.data.eksisting);
+            setJenisJalanList(jenisResponse.data.eksisting);
         } catch (_) {
-            onError?.('Gagal memuat data ruas jalan');
+            onError?.('Gagal memuat data');
         } finally {
             setLoading(false);
         }
     };
 
-    /** Hapus satu ruas jalan */
     const handleDelete = async (id: string) => {
         try {
             await deleteRuasJalanByID(id);
             onDeleteSuccess?.('Data berhasil dihapus');
-            fetchData(); // refresh list
+            fetchData();
         } catch (_) {
             onError?.('Gagal menghapus data');
         }
     };
 
-    const handleSearch = (term: string) => {
+    const handleSearch = (
+        term: string,
+        kondisiFilter = selectedKondisi,
+        jenisFilter = selectedJenis
+    ) => {
         setSearchTerm(term);
-        const filtered = data.filter((item) =>
-            item.nama_ruas.toLowerCase().includes(term.toLowerCase()) ||
-            item.kode_ruas.toLowerCase().includes(term.toLowerCase())
-        );
+        const filtered = data.filter((item) => {
+            const matchTerm =
+                item.nama_ruas.toLowerCase().includes(term.toLowerCase()) ||
+                item.kode_ruas.toLowerCase().includes(term.toLowerCase());
+
+            const matchKondisi = kondisiFilter !== 'all' ? item.kondisi_id.toString() === kondisiFilter : true;
+            const matchJenis = jenisFilter !== 'all' ? item.jenisjalan_id.toString() === jenisFilter : true;
+
+            return matchTerm && matchKondisi && matchJenis;
+        });
+
         setFilteredData(filtered);
     };
 
@@ -98,17 +140,59 @@ export const RuasJalanTable = ({
     return (
         <Card className="mt-4">
             <CardContent className="p-4 overflow-x-auto">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold">Data Ruas Jalan</h2>
                 </div>
-                <div className='mb-2 flex'>
-                    <Input
-                        type="text"
-                        placeholder="Cari kode atau nama ruas…"
-                        className="w-64"
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
-                    />
+                <div className="mb-2 flex gap-4">
+                    <div className="flex-1">
+                        <Input
+                            type="text"
+                            placeholder="Cari kode atau nama ruas…"
+                            className="w-full"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div className='flex gap-4 mb-4'>
+                    <Select
+                        value={selectedKondisi}
+                        onValueChange={(value) => {
+                            setSelectedKondisi(value);
+                            handleSearch(searchTerm, value, selectedJenis);
+                        }}
+                    >
+                        <SelectTrigger className="w-90">
+                            <SelectValue placeholder="Filter Kondisi" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua Kondisi</SelectItem>
+                            {kondisiList.map((k) => (
+                                <SelectItem key={k.id} value={k.id.toString()}>
+                                    {k.kondisi}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={selectedJenis}
+                        onValueChange={(value) => {
+                            setSelectedJenis(value);
+                            handleSearch(searchTerm, selectedKondisi, value);
+                        }}
+                    >
+                        <SelectTrigger className="w-90">
+                            <SelectValue placeholder="Filter Jenis Jalan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua Jenis</SelectItem>
+                            {jenisJalanList.map((j) => (
+                                <SelectItem key={j.id} value={j.id.toString()}>
+                                    {j.jenisjalan}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 {loading ? (
@@ -131,20 +215,24 @@ export const RuasJalanTable = ({
 
                         <TableBody>
                             {filteredData.map((ruas) => (
-                                <TableRow key={ruas.kode_ruas}>
+                                <TableRow key={ruas.id}>
                                     <TableCell>{ruas.kode_ruas}</TableCell>
                                     <TableCell>{ruas.nama_ruas}</TableCell>
-                                    <TableCell>{ruas.panjang}</TableCell>
-                                    <TableCell>{ruas.lebar}</TableCell>
+                                    <TableCell>{ruas.panjang ? `${ruas.panjang} m` : '-'}</TableCell>
+                                    <TableCell>{ruas.lebar ? `${ruas.lebar} m` : '-'}</TableCell>
                                     <TableCell>{ruas.eksisting_id}</TableCell>
-                                    <TableCell>{ruas.kondisi_id}</TableCell>
-                                    <TableCell>{ruas.jenisjalan_id}</TableCell>
+                                    <TableCell>
+                                        {kondisiMap[ruas.kondisi_id?.toString()] || '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {jenisJalanMap[ruas.jenisjalan_id?.toString()] || '-'}
+                                    </TableCell>
                                     <TableCell>{ruas.keterangan}</TableCell>
                                     <TableCell className="flex gap-2">
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            onClick={() => alert("Fitur edit belum diimplementasikan")}
+                                            onClick={() => onEdit?.(ruas.id)}
                                         >
                                             Edit
                                         </Button>
@@ -176,6 +264,13 @@ export const RuasJalanTable = ({
                                     </TableCell>
                                 </TableRow>
                             ))}
+                            {filteredData.length === 0 && !loading && (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="text-center text-gray-500">
+                                        Tidak ada data yang cocok.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 )}
