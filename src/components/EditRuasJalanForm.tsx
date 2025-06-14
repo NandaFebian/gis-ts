@@ -16,9 +16,9 @@ import {
     getMasterJenisJalan,
     getMasterKondisiJalan,
     getDesaByKecamatanID,
-    getRuasJalanByID,
     editRuasJalanByID,
 } from "@/api/apiService";
+import { useSelectedRuasStore } from "@/stores/useSelectedRuasStore";
 
 type Props = {
     id: string;
@@ -27,6 +27,8 @@ type Props = {
 };
 
 export const EditRuasJalanForm: React.FC<Props> = ({ id, onSuccess, onError }) => {
+    const selectedRuas = useSelectedRuasStore((state) => state.selectedRuas);
+
     const [formData, setFormData] = useState({
         paths: "",
         desa_id: "",
@@ -73,16 +75,6 @@ export const EditRuasJalanForm: React.FC<Props> = ({ id, onSuccess, onError }) =
         }
     };
 
-    const fetchData = async () => {
-        try {
-            const res = await getRuasJalanByID(id);
-            setFormData(res.data);
-        } catch (err) {
-            console.error("Gagal mengambil data:", err);
-            onError?.("Gagal mengambil data ruas jalan.");
-        }
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -96,10 +88,27 @@ export const EditRuasJalanForm: React.FC<Props> = ({ id, onSuccess, onError }) =
         }
     };
 
+    // Ambil data dari store saat form pertama dibuka
+    useEffect(() => {
+        if (selectedRuas) {
+            setFormData({
+                paths: selectedRuas.paths || "",
+                desa_id: selectedRuas.desa_id || "",
+                kode_ruas: selectedRuas.kode_ruas || "",
+                nama_ruas: selectedRuas.nama_ruas || "",
+                panjang: selectedRuas.panjang || "",
+                lebar: selectedRuas.lebar || "",
+                eksisting_id: selectedRuas.eksisting_id || "",
+                kondisi_id: selectedRuas.kondisi_id || "",
+                jenisjalan_id: selectedRuas.jenisjalan_id || "",
+                keterangan: selectedRuas.keterangan || "",
+            });
+        }
+    }, [selectedRuas]);
+
     useEffect(() => {
         fetchDropdowns();
-        fetchData();
-    }, [id]);
+    }, []);
 
     return (
         <div className="max-w-2xl mx-auto p-4">

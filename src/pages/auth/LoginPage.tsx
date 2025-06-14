@@ -25,12 +25,7 @@ export default function LoginPage() {
         setLoading(true);
         setError(null);
         try {
-            const data = await loginUser({ email, password });
-            // Ambil token dari data.meta.token sesuai struktur response API
-            localStorage.setItem("token", data.meta.token);
-            // Jika ada data user, sesuaikan penempatan data user juga
-            // localStorage.setItem("user", JSON.stringify(data.user)); // jika ada user di response
-
+            await loginUser({ email, password }); // token, email, dan password sudah disimpan di dalam fungsi ini
             navigate("/home"); // arahkan ke halaman dashboard
         } catch (err: any) {
             setError(err.message || "Gagal login.");
