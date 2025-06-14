@@ -4,7 +4,9 @@ import {
     deleteRuasJalanByID,
     getMasterKondisiJalan,
     getMasterJenisJalan,
+    getMasterEksistingJalan,
 } from '@/api/apiService';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+
 import {
     AlertDialog,
     AlertDialogTrigger,
@@ -37,32 +40,19 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 
-interface RuasJalanData {
-    id: string;
-    paths: string;
-    desa_id: string;
-    kode_ruas: string;
-    nama_ruas: string;
-    panjang: string;
-    lebar: string;
-    eksisting_id: string;
-    kondisi_id: string;
-    jenisjalan_id: string;
-    keterangan: string;
-}
+import type { RuasJalanData } from '@/types/RuasJalan';
+import { useSelectedRuasStore } from '@/stores/useSelectedRuasStore';
 
 interface RuasJalanTableProps {
     onDeleteSuccess?: (msg: string) => void;
     onError?: (msg: string) => void;
     onEdit?: (id: string) => void;
-    onRowClick?: (ruas: RuasJalanData) => void; // 👉 Tambahan ini
 }
 
 export const RuasJalanTable = ({
     onDeleteSuccess,
     onError,
     onEdit,
-    onRowClick,
 }: RuasJalanTableProps) => {
     const [data, setData] = useState<RuasJalanData[]>([]);
     const [filteredData, setFilteredData] = useState<RuasJalanData[]>([]);
@@ -70,8 +60,10 @@ export const RuasJalanTable = ({
     const [loading, setLoading] = useState<boolean>(true);
     const [kondisiList, setKondisiList] = useState<{ id: number; kondisi: string }[]>([]);
     const [jenisJalanList, setJenisJalanList] = useState<{ id: number; jenisjalan: string }[]>([]);
+    const [eksistingList, setEksistingList] = useState<{ id: number; eksisting: string }[]>([]);
     const [selectedKondisi, setSelectedKondisi] = useState('all');
     const [selectedJenis, setSelectedJenis] = useState('all');
+    const [selectedEksisting, setSelectedEksisting] = useState('all');
 
     const kondisiMap: Record<string, string> = {
         "1": "Baik",
@@ -99,10 +91,11 @@ export const RuasJalanTable = ({
 
     const fetchData = async () => {
         try {
-            const [ruasResponse, kondisiResponse, jenisResponse] = await Promise.all([
+            const [ruasResponse, kondisiResponse, jenisResponse, eksistingResponse] = await Promise.all([
                 getAllRuasJalan(),
                 getMasterKondisiJalan(),
                 getMasterJenisJalan(),
+                getMasterEksistingJalan(),
             ]);
 
             const ruas = ruasResponse.data.ruasjalan;
@@ -110,6 +103,7 @@ export const RuasJalanTable = ({
             setFilteredData(ruas);
             setKondisiList(kondisiResponse.data.eksisting);
             setJenisJalanList(jenisResponse.data.eksisting);
+            setEksistingList(eksistingResponse.data.eksisting);
         } catch (_) {
             onError?.('Gagal memuat data');
         } finally {
@@ -130,7 +124,8 @@ export const RuasJalanTable = ({
     const handleSearch = (
         term: string,
         kondisiFilter = selectedKondisi,
-        jenisFilter = selectedJenis
+        jenisFilter = selectedJenis,
+        eksistingFilter = selectedEksisting
     ) => {
         setSearchTerm(term);
         const filtered = data.filter((item) => {
@@ -140,8 +135,9 @@ export const RuasJalanTable = ({
 
             const matchKondisi = kondisiFilter !== 'all' ? item.kondisi_id.toString() === kondisiFilter : true;
             const matchJenis = jenisFilter !== 'all' ? item.jenisjalan_id.toString() === jenisFilter : true;
+            const matchEksisting = eksistingFilter !== 'all' ? item.eksisting_id.toString() === eksistingFilter : true;
 
-            return matchTerm && matchKondisi && matchJenis;
+            return matchTerm && matchKondisi && matchJenis && matchEksisting;
         });
 
         setFilteredData(filtered);
@@ -207,6 +203,25 @@ export const RuasJalanTable = ({
                             ))}
                         </SelectContent>
                     </Select>
+                    <Select
+                        value={selectedEksisting}
+                        onValueChange={(value) => {
+                            setSelectedEksisting(value);
+                            handleSearch(searchTerm, selectedKondisi, selectedJenis, value);
+                        }}
+                    >
+                        <SelectTrigger className="w-90">
+                            <SelectValue placeholder="Filter Eksisting Jalan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua Eksisting</SelectItem>
+                            {eksistingList.map((e) => (
+                                <SelectItem key={e.id} value={e.id.toString()}>
+                                    {e.eksisting}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 {loading ? (
@@ -232,7 +247,7 @@ export const RuasJalanTable = ({
                                 <TableRow
                                     key={ruas.id}
                                     className="cursor-pointer hover:bg-gray-100"
-                                    onClick={() => onRowClick?.(ruas)} // ✅ Tambahkan ini
+                                    onClick={() => useSelectedRuasStore.getState().setSelectedRuas(ruas)} //menyimpan state ruas yang dipilih
                                 >
                                     <TableCell>{ruas.kode_ruas}</TableCell>
                                     <TableCell>{ruas.nama_ruas}</TableCell>
@@ -252,7 +267,10 @@ export const RuasJalanTable = ({
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            onClick={() => onEdit?.(ruas.id)}
+                                            onClick={() => {
+                                                useSelectedRuasStore.getState().setSelectedRuas(ruas); // simpan ke store
+                                                onEdit?.(ruas.id); // buka form edit
+                                            }}
                                         >
                                             Edit
                                         </Button>
