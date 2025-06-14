@@ -9,6 +9,14 @@ function App() {
   return (
     <Routes>
       <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        }
+      />
+      <Route
         path="/login"
         element={
           <PublicRoute>

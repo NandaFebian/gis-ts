@@ -15,7 +15,6 @@ import { getAllRuasJalan } from "@/api/apiService";
 
 interface MapViewProps {
     onPathChange?: (path: string) => void;
-    initialPath?: string;
 }
 
 const centerBali: [number, number] = [-8.409518, 115.188919];
@@ -28,19 +27,6 @@ const ForceMapResize = () => {
         }, 100);
     }, [map]);
     return null;
-};
-
-const getLineStyleByJenisJalan = (jenisId: number) => {
-    switch (jenisId) {
-        case 1: // Desa
-            return { dashArray: "5, 10" };
-        case 2: // Kabupaten
-            return { dashArray: "5, 5, 10" };
-        case 3: // Provinsi
-            return {}; // solid
-        default:
-            return { dashArray: "1, 5" }; // default lain
-    }
 };
 
 const ShowAllPolylines = () => {
@@ -120,7 +106,7 @@ const ShowAllPolylines = () => {
     );
 };
 
-const MapView: React.FC<MapViewProps> = ({ onPathChange, initialPath }) => {
+const MapView: React.FC<MapViewProps> = ({ onPathChange }) => {
     const mapRef = useRef<L.Map | null>(null);
     const drawnLayerRef = useRef<L.Layer | null>(null);
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);

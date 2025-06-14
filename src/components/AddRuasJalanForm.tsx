@@ -46,7 +46,7 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
     const [jenisJalanOptions, setJenisJalanOptions] = useState<any[]>([]);
     const [showMap, setShowMap] = useState(false);
 
-    const [status, setStatus] = useState<"success" | "error" | null>(null);
+    const [status] = useState<"success" | "error" | null>(null);
 
     const handleChange = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -75,14 +75,11 @@ export const AddRuasJalanForm: React.FC<Props> = ({ onSuccess }) => {
         }
     };
 
-    const [refreshKey, setRefreshKey] = useState(0); // trigger refresh
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await addNewRuasJalan(formData);
             alert("Berhasil menambahkan data!");
-            setRefreshKey((prev) => prev + 1); // trigger refresh MapView
             if (onSuccess) onSuccess();
         } catch (error) {
             console.error(error);

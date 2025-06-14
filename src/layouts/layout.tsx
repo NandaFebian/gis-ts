@@ -4,6 +4,7 @@ import { RuasJalanTable } from "@/components/RuasJalanTable";
 import { useState } from "react";
 import { AddRuasJalanForm } from "@/components/AddRuasJalanForm"; // import komponen form baru
 import { EditRuasJalanForm } from "@/components/EditRuasJalanForm";
+// Import RuasJalanData type (adjust the path as needed)
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -88,7 +89,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     )}
                     {/* Panel Form Tambah Ruas Jalan */}
                     {isAddFormOpen && (
-                        <div className="absolute top-0 left-0 h-full w-[400px] bg-white border-r shadow-md z-10 transition-all px-1">
+                        <div className="absolute top-0 left-0 h-full w-[400px] bg-white border-r shadow-md z-10 px-1">
                             <div className="p-5 h-full overflow-y-auto">
                                 <div className="flex justify-end mb-4">
                                     <button
@@ -105,7 +106,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     )}
                     {/* Konten utama */}
                     <main
-                        className={`transition-all duration-300 ease-in-out flex-1 p-4 mt-6 ${isAddFormOpen
+                        className={`transition-all duration-300 ease-in-out flex-1 p-4 mt-1 ${isAddFormOpen
                             ? "ml-[400px]"
                             : isPanelOpen
                                 ? "ml-[800px]"

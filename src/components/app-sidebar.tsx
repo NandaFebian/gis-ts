@@ -1,12 +1,10 @@
 import { MapIcon, ListBulletIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { Loader2Icon } from "lucide-react"
 
 import {
     Sidebar,
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
-    SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,

@@ -113,7 +113,7 @@ export const EditRuasJalanForm: React.FC<Props> = ({ id, onSuccess, onError }) =
                 </div>
                 {showMap && (
                     <div className="h-[400px] mt-4">
-                        <MapView onPathChange={handlePathChange} initialPath={formData.paths} />
+                        <MapView onPathChange={handlePathChange} />
                     </div>
                 )}
 

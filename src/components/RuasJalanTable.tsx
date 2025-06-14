@@ -55,12 +55,14 @@ interface RuasJalanTableProps {
     onDeleteSuccess?: (msg: string) => void;
     onError?: (msg: string) => void;
     onEdit?: (id: string) => void;
+    onRowClick?: (ruas: RuasJalanData) => void; // 👉 Tambahan ini
 }
 
 export const RuasJalanTable = ({
     onDeleteSuccess,
     onError,
     onEdit,
+    onRowClick,
 }: RuasJalanTableProps) => {
     const [data, setData] = useState<RuasJalanData[]>([]);
     const [filteredData, setFilteredData] = useState<RuasJalanData[]>([]);
@@ -81,6 +83,18 @@ export const RuasJalanTable = ({
         "1": "Desa",
         "2": "Kabupaten",
         "3": "Provinsi",
+    };
+
+    const eksistingMap: Record<string, string> = {
+        "1": "Tanah",
+        "2": "Tanah/Beton",
+        "3": "Perkerasan",
+        "4": "Koral",
+        "5": "Lapen",
+        "6": "Paving",
+        "7": "Hotmix",
+        "8": "Beton",
+        "9": "Beton/Lapen",
     };
 
     const fetchData = async () => {
@@ -215,12 +229,18 @@ export const RuasJalanTable = ({
 
                         <TableBody>
                             {filteredData.map((ruas) => (
-                                <TableRow key={ruas.id}>
+                                <TableRow
+                                    key={ruas.id}
+                                    className="cursor-pointer hover:bg-gray-100"
+                                    onClick={() => onRowClick?.(ruas)} // ✅ Tambahkan ini
+                                >
                                     <TableCell>{ruas.kode_ruas}</TableCell>
                                     <TableCell>{ruas.nama_ruas}</TableCell>
                                     <TableCell>{ruas.panjang ? `${ruas.panjang} m` : '-'}</TableCell>
                                     <TableCell>{ruas.lebar ? `${ruas.lebar} m` : '-'}</TableCell>
-                                    <TableCell>{ruas.eksisting_id}</TableCell>
+                                    <TableCell>
+                                        {eksistingMap[ruas.eksisting_id?.toString()] || '-'}
+                                    </TableCell>
                                     <TableCell>
                                         {kondisiMap[ruas.kondisi_id?.toString()] || '-'}
                                     </TableCell>
@@ -228,7 +248,7 @@ export const RuasJalanTable = ({
                                         {jenisJalanMap[ruas.jenisjalan_id?.toString()] || '-'}
                                     </TableCell>
                                     <TableCell>{ruas.keterangan}</TableCell>
-                                    <TableCell className="flex gap-2">
+                                    <TableCell className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                         <Button
                                             size="sm"
                                             variant="outline"
@@ -264,6 +284,7 @@ export const RuasJalanTable = ({
                                     </TableCell>
                                 </TableRow>
                             ))}
+
                             {filteredData.length === 0 && !loading && (
                                 <TableRow>
                                     <TableCell colSpan={9} className="text-center text-gray-500">
