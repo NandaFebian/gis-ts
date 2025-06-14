@@ -79,12 +79,52 @@ export const loginUser = async (credentials: UserData): Promise<LoginResponse> =
       throw new Error(data.meta.message || `HTTP error! status: ${response.status}`);
     }
 
-    // Simpan token ke localStorage sesuai lokasi token yang sebenarnya di response
+    // Simpan token dan kredensial ke localStorage
     localStorage.setItem("token", data.meta.token);
+    localStorage.setItem("email", credentials.email!);
+    localStorage.setItem("password", credentials.password!);
 
     return data;
   } catch (error) {
     console.error('Error during login:', error);
+    throw error;
+  }
+};
+
+export const logoutUser = async (): Promise<void> => {
+  try {
+    const token = localStorage.getItem("token");
+    const email = localStorage.getItem("email");
+    const password = localStorage.getItem("password");
+
+    if (!token || !email || !password) {
+      throw new Error("Data login tidak tersedia.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/logout`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        email,
+        password,
+      }).toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `HTTP error! status: ${response.status}`);
+    }
+
+    // Bersihkan data login dari localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    localStorage.removeItem("password");
+
+  } catch (error) {
+    console.error('Error during logout:', error);
     throw error;
   }
 };

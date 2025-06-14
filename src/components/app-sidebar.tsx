@@ -26,6 +26,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { logoutUser } from "@/api/apiService";
 
 const items = [
     { title: "Map", key: "home", icon: MapIcon },
@@ -42,10 +43,19 @@ type AppSidebarProps = {
 export function AppSidebar({ style, onOpenPanel, onOpenAddForm }: AppSidebarProps) {
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login", { replace: true });
+    const handleLogout = async () => {
+        try {
+            await logoutUser(); // Panggil API logout
+        } catch (error) {
+            console.error("Logout API error:", error);
+            // Optional: bisa tampilkan toast atau alert
+        } finally {
+            // Bersihkan localStorage dan arahkan ke login, tetap dilakukan meskipun logout gagal
+            localStorage.removeItem("token");
+            localStorage.removeItem("email");
+            localStorage.removeItem("password");
+            navigate("/login", { replace: true });
+        }
     };
 
     return (
